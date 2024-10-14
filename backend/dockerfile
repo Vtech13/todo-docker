@@ -1,0 +1,14 @@
+# Étape 1 : Construction de l'application
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY . .
+
+# Étape 2 : Image finale légère
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=build /app .
+ENV NODE_ENV=production
+RUN npm install cors
+CMD ["node", "server.js"]
