@@ -1,16 +1,19 @@
 # Application de Gestion de Tâches (Todo List) avec Docker
 
 ## Table des Matières
-- [Introduction](#introduction)
-- [Technologies Utilisées](#technologies-utilisées)
-- [Structure du Projet](#structure-du-projet)
-- [Configuration de l'Environnement](#configuration-de-lenvironnement)
-- [Démarrer le Projet](#démarrer-le-projet)
-- [API](#api)
-- [Tests](#tests)
-- [Documentation des Commandes](#documentation-des-commandes)
-- [Contributions](#contributions)
-- [Licence](#licence)
+- [Application de Gestion de Tâches (Todo List) avec Docker](#application-de-gestion-de-tâches-todo-list-avec-docker)
+  - [Table des Matières](#table-des-matières)
+  - [Introduction](#introduction)
+  - [Technologies Utilisées](#technologies-utilisées)
+  - [Structure du Projet](#structure-du-projet)
+  - [Configuration de l'Environnement](#configuration-de-lenvironnement)
+    - [Prérequis](#prérequis)
+    - [Variables d'Environnement](#variables-denvironnement)
+  - [Démarrer le Projet](#démarrer-le-projet)
+  - [API](#api)
+    - [Obtenir toutes les tâches](#obtenir-toutes-les-tâches)
+    - [Ajouter une nouvelle tâche](#ajouter-une-nouvelle-tâche)
+  - [Tests](#tests)
 
 ## Introduction
 
@@ -21,12 +24,12 @@ Cette application de gestion de tâches permet à l'utilisateur d'ajouter et de 
 - **Backend** : Node.js avec Express.js
 - **Frontend** : React
 - **Base de Données** : MySQL
-- **Containerisation** : Docker et Docker Compose
+- **Containerisation** : Docker, Docker Compose et Docker Swarm
 
 ## Structure du Projet
 
 ```
-rendu_15-10-2024/
+rendu_18-11-2024/
 ├── backend/
 │   ├── Dockerfile
 │   ├── package.json
@@ -36,6 +39,10 @@ rendu_15-10-2024/
 │   ├── Dockerfile
 │   ├── package.json
 │   └── src/
+├── secrets/
+│   ├── backend-password
+│   ├── db-password
+│   ├── db-root-password
 ├── docker-compose.yml
 └── README.md
 ```
@@ -60,13 +67,13 @@ Le backend se connecte à la base de données MySQL à l'aide des variables d'en
 
    ```bash
    git clone <URL_DU_DEPOT>
-   cd rendu_15-10-2024
+   cd todo-docker
    ```
 
 2. Démarrez les conteneurs avec Docker Compose :
 
    ```bash
-   docker-compose up --build
+   docker-compose up --d
    ```
 
 3. Accédez à l'application :

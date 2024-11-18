@@ -1,19 +1,36 @@
+secrets:
+  db-password:
+    file: ./secrets/db-password
+  db-root-password:
+    file: ./secrets/db-root-password
+  backend-password:
+    file: ./secrets/backend-password
+
 services:
   db:
     image: mysql:5.7
-    platform: linux/amd64
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      MYSQL_ROOT_PASSWORD: /run/secrets/db-root-password
       MYSQL_DATABASE: mydatabase
       MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_PASSWORD: /run/secrets/db-password
+    secrets:
+      - db-password
+      - db-root-password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    command: --bind-address=0.0.0.0
+    # networks:
+    #   - my_network
 
   backend:
-    build: ./backend
+    image: mon_image_backend:latest
     ports:
       - "5001:5000"
     depends_on:
@@ -21,17 +38,35 @@ services:
     environment:
       DB_HOST: db
       DB_USER: user
-      DB_PASSWORD: password
+      DB_PASSWORD: /run/secrets/backend-password
       DB_NAME: mydatabase
+    secrets:
+      - backend-password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    # networks:
+    #   - my_network
 
   frontend:
-    build: ./frontend/frontend
+    image: mon_image_frontend:latest
     ports:
       - "3000:80"
     depends_on:
       - backend
     environment:
       REACT_APP_API_URL: http://backend:5000
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    # networks:
+    #   - my_network
+
+networks:
+  my_network:
+    driver: overlay
 
 volumes:
   mysql_data:
