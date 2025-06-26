@@ -116,11 +116,23 @@ function CallbackPage({ setToken, setUser }) {
     if (googleToken) {
       setToken(googleToken);
       localStorage.setItem('token', googleToken);
-      navigate('/', { replace: true });
+      // Authentifier l'utilisateur avant de rediriger
+      fetch(`${process.env.REACT_APP_API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${googleToken}` },
+        credentials: 'include',
+      })
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => {
+          setUser(data.user);
+          navigate('/', { replace: true });
+        })
+        .catch(() => {
+          navigate('/login', { replace: true });
+        });
     } else {
       navigate('/login', { replace: true });
     }
-  }, [location, setToken, navigate]);
+  }, [location, setToken, setUser, navigate]);
   return <div className="auth-bg"><div className="auth-card">Connexion Google en cours...</div></div>;
 }
 
