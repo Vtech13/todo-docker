@@ -64,6 +64,7 @@
   flex-direction: column;
   gap: 16px;
   align-items: stretch;
+  text-align: center;
 }
 
 .auth-card input {
@@ -123,5 +124,11 @@
   padding: 8px;
   margin-top: 8px;
   font-size: 0.97rem;
+  text-align: center;
+}
+
+/* 404 & callback page styles */
+.auth-card {
+  /* déjà stylé, mais on peut ajouter un style pour le loader ou la 404 */
   text-align: center;
 }
