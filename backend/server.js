@@ -116,6 +116,16 @@ const connectWithRetry = () => {
         )
       `);
 
+      // Créer la table des fichiers utilisateurs
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_files (
+          id SERIAL PRIMARY KEY,
+          user_id INT REFERENCES users(id) ON DELETE CASCADE,
+          blob_name VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       setupRoutes();
     })
     .catch(err => {
@@ -347,6 +357,13 @@ function setupRoutes() {
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'Aucun fichier envoyé' });
       const blobName = await uploadBlob(file.originalname, file.buffer);
+
+      // Lier le fichier à l'utilisateur
+      await pool.query(
+        'INSERT INTO user_files (user_id, blob_name) VALUES ($1, $2)',
+        [req.user.id, blobName]
+      );
+
       const url = getBlobSasUrl(blobName);
       res.json({ url, name: blobName });
     } catch (err) {
@@ -357,14 +374,17 @@ function setupRoutes() {
   // Nouvelle route pour lister les fichiers avec liens SAS
   app.get('/files', isAuthenticated, async (req, res) => {
     try {
-      const blobs = await listBlobs();
-      const files = blobs.map(name => ({
-        name,
-        url: getBlobSasUrl(name)
+      // Récupère les blobs liés à l'utilisateur
+      const { rows } = await pool.query(
+        'SELECT blob_name FROM user_files WHERE user_id = $1 ORDER BY created_at DESC',
+        [req.user.id]
+      );
+      const files = rows.map(row => ({
+        name: row.blob_name,
+        url: getBlobSasUrl(row.blob_name)
       }));
       res.json(files);
     } catch (err) {
-      console.error('Erreur /files :', err); // <-- Ajoute ce log
       res.status(500).json({ error: err.message });
     }
   });
@@ -373,6 +393,11 @@ function setupRoutes() {
   app.delete('/files/:name', isAuthenticated, async (req, res) => {
     try {
       const blobName = decodeURIComponent(req.params.name);
+      // Supprime le lien dans la table user_files
+      await pool.query(
+        'DELETE FROM user_files WHERE user_id = $1 AND blob_name = $2',
+        [req.user.id, blobName]
+      );
       await deleteBlob(blobName);
       res.json({ message: 'Fichier supprimé' });
     } catch (err) {
