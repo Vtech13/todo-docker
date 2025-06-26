@@ -142,87 +142,94 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>To-Do List</h1>
-        {user ? (
-          <>
-            <div style={{ marginBottom: 20 }}>
-              <span>Connecté en tant que <b>{user.name || user.email}</b></span>
-              <button style={{ marginLeft: 10 }} onClick={handleLogout}>Déconnexion</button>
-            </div>
-            <input
-              type="text"
-              value={newTask}
-              onChange={e => setNewTask(e.target.value)}
-              placeholder="Nouvelle tâche"
-            />
-            <button onClick={addTask}>Ajouter</button>
-            <ul>
-              {tasks.map(task => (
-                <li key={task.id}>
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() =>
-                      updateTask(task.id, { ...task, completed: !task.completed })
-                    }
-                  />
-                  <input
-                    type="text"
-                    value={task.title}
-                    onChange={e =>
-                      updateTask(task.id, { ...task, title: e.target.value })
-                    }
-                  />
-                  <button onClick={() => deleteTask(task.id)}>Supprimer</button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <div style={{ maxWidth: 300, margin: 'auto' }}>
-            <form onSubmit={handleAuthSubmit}>
-              {authMode === 'register' && (
+    <div className={user ? "App" : "App auth-bg"}>
+      {user ? (
+        <header className="App-header">
+          <h1>To-Do List</h1>
+          <div style={{ marginBottom: 20 }}>
+            <span>Connecté en tant que <b>{user.name || user.email}</b></span>
+            <button style={{ marginLeft: 10 }} onClick={handleLogout}>Déconnexion</button>
+          </div>
+          <input
+            type="text"
+            value={newTask}
+            onChange={e => setNewTask(e.target.value)}
+            placeholder="Nouvelle tâche"
+          />
+          <button onClick={addTask}>Ajouter</button>
+          <ul>
+            {tasks.map(task => (
+              <li key={task.id}>
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() =>
+                    updateTask(task.id, { ...task, completed: !task.completed })
+                  }
+                />
                 <input
                   type="text"
-                  name="name"
-                  placeholder="Nom"
-                  value={authForm.name}
-                  onChange={handleAuthChange}
-                  required
+                  value={task.title}
+                  onChange={e =>
+                    updateTask(task.id, { ...task, title: e.target.value })
+                  }
                 />
-              )}
+                <button onClick={() => deleteTask(task.id)}>Supprimer</button>
+              </li>
+            ))}
+          </ul>
+        </header>
+      ) : (
+        <div className="auth-container">
+          <form className="auth-card" onSubmit={handleAuthSubmit}>
+            <h2 style={{ marginBottom: 20 }}>{authMode === 'login' ? 'Connexion' : 'Inscription'}</h2>
+            {authMode === 'register' && (
               <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={authForm.email}
+                type="text"
+                name="name"
+                placeholder="Nom"
+                value={authForm.name}
                 onChange={handleAuthChange}
                 required
               />
-              <input
-                type="password"
-                name="password"
-                placeholder="Mot de passe"
-                value={authForm.password}
-                onChange={handleAuthChange}
-                required
-              />
-              <button type="submit" disabled={loading}>
-                {authMode === 'login' ? 'Connexion' : 'Inscription'}
-              </button>
-              <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
-                {authMode === 'login' ? "Créer un compte" : "J'ai déjà un compte"}
-              </button>
-              <button type="button" onClick={handleGoogleLogin} style={{ background: '#4285F4', color: 'white', marginTop: 10 }}>
-                Connexion avec Google
-              </button>
-              {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-            </form>
-          </div>
-        )}
-      </header>
+            )}
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={authForm.email}
+              onChange={handleAuthChange}
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Mot de passe"
+              value={authForm.password}
+              onChange={handleAuthChange}
+              required
+            />
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {authMode === 'login' ? 'Connexion' : 'Inscription'}
+            </button>
+            <button
+              type="button"
+              className="auth-switch"
+              onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+            >
+              {authMode === 'login' ? "Créer un compte" : "J'ai déjà un compte"}
+            </button>
+            <button
+              type="button"
+              className="google-btn"
+              onClick={handleGoogleLogin}
+            >
+              Connexion avec Google
+            </button>
+            {error && <div className="auth-error">{error}</div>}
+          </form>
+        </div>
+      )}
     </div>
   );
 }
