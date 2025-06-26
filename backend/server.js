@@ -245,7 +245,7 @@ function setupRoutes() {
         );
 
         // Rediriger vers le frontend avec le token
-        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/callback?token=${token}`);
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/google/callback?token=${token}`);
       }
   );
 
