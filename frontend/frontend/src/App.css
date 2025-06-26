@@ -132,3 +132,32 @@
   /* déjà stylé, mais on peut ajouter un style pour le loader ou la 404 */
   text-align: center;
 }
+
+/* Formulaire d'upload de fichier */
+.file-upload-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.file-upload-form input[type="file"] {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 1rem;
+}
+
+.file-upload-form button {
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.file-upload-form button:hover {
+  background: #4f46e5;
+}

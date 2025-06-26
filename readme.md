@@ -20,7 +20,7 @@ Cette application de gestion de tâches permet à l'utilisateur d'ajouter et de 
 
 - **Backend** : Node.js avec Express.js
 - **Frontend** : React
-- **Base de Données** : MySQL
+- **Base de Données** : Postgre
 - **Containerisation** : Docker et Docker Compose
 
 ## Structure du Projet

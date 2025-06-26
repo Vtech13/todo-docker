@@ -22,14 +22,10 @@ services:
     build: ./backend
     ports:
       - "5001:5000"
+    env_file:
+      - ./backend/.env
     depends_on:
       - postgres
-    environment:
-      DB_HOST: postgres
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: mydatabase
-      DB_PORT: 5432
     networks:
       - todoDocker
 

@@ -78,6 +78,7 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
   const [editingId, setEditingId] = React.useState(null);
   const [editValue, setEditValue] = React.useState('');
   const editInputRef = React.useRef(null);
+  const [files, setFiles] = React.useState([]);
 
   // Focus automatique sur l'input de création de tâche
   React.useEffect(() => {
@@ -92,6 +93,19 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
       editInputRef.current.focus();
     }
   }, [editingId]);
+
+  // Recharge la liste des fichiers à chaque ajout de tâche ou fichier
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${process.env.REACT_APP_API_URL}/files`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(setFiles)
+        .catch(() => setFiles([]));
+    }
+  }, [tasks]);
 
   const handleAddTask = () => {
     if (newTask.trim()) {
@@ -151,6 +165,36 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
             </button>
           </form>
 
+          {/* Formulaire d'upload de fichier */}
+          <form
+            className="file-upload-form"
+            onSubmit={async e => {
+              e.preventDefault();
+              const file = e.target.elements.file.files[0];
+              if (!file) return alert('Sélectionne un fichier');
+              try {
+                const token = localStorage.getItem('token');
+                const formData = new FormData();
+                formData.append('file', file);
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/upload`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}` },
+                  body: formData,
+                });
+                if (!response.ok) throw new Error('Erreur lors de l\'upload');
+                const data = await response.json();
+                alert('Fichier envoyé ! URL Azure : ' + data.url);
+              } catch (err) {
+                alert('Erreur lors de l\'upload : ' + err.message);
+              }
+              e.target.reset();
+            }}
+            style={{ marginBottom: 24 }}
+          >
+            <input type="file" name="file" />
+            <button type="submit">Envoyer un fichier</button>
+          </form>
+
           {/* Liste des tâches */}
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {tasks.map(task => (
@@ -176,8 +220,10 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
                       }}
                       style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '1rem', background: 'white' }}
                     />
-                    <button onClick={() => validateEdit(task)} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Valider</button>
-                    <button onClick={cancelEdit} style={{ background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Annuler</button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => validateEdit(task)} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, cursor: 'pointer' }}>Valider</button>
+                      <button onClick={cancelEdit} style={{ background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, cursor: 'pointer' }}>Annuler</button>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -194,6 +240,35 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
             <p style={{ fontStyle: 'italic', color: '#64748b', marginTop: 18, textAlign: 'center' }}>
               Aucune tâche pour le moment. Ajoutez-en une !
             </p>
+          )}
+
+          {/* Liste des fichiers envoyés */}
+          {files.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <h4 style={{ marginBottom: 12 }}>Fichiers envoyés :</h4>
+              <ul style={{ paddingLeft: 0, listStyle: 'none' }}>
+                {files.map(f => (
+                  <li key={f.name} style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <a href={f.url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', flex: 1 }}>{f.name}</a>
+                    <button
+                      style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, padding: '6px 12px', fontWeight: 500, cursor: 'pointer' }}
+                      onClick={async () => {
+                        const token = localStorage.getItem('token');
+                        if (window.confirm('Supprimer ce fichier ?')) {
+                          await fetch(`${process.env.REACT_APP_API_URL}/files/${encodeURIComponent(f.name)}`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          setFiles(files => files.filter(file => file.name !== f.name));
+                        }
+                      }}
+                    >
+                      Supprimer
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </main>
@@ -552,6 +627,23 @@ function App() {
   const handleGoogleLogin = () => {
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
   };
+
+  // À placer dans un composant React
+  async function uploadFile(file, token) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) throw new Error('Erreur lors de l\'upload');
+    return response.json(); // { url: ... }
+  }
 
   return (
     <Router>

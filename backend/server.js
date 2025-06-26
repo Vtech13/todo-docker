@@ -8,6 +8,9 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
+const multer = require('multer');
+const upload = multer();
+const { uploadBlob, getBlobSasUrl, listBlobs, deleteBlob } = require('./src/services/azureBlobService');
 
 dotenv.config();
 
@@ -335,6 +338,45 @@ function setupRoutes() {
       res.json({ message: 'Tâche supprimée avec succès' });
     } catch (err) {
       res.status(500).json({ error: 'Erreur lors de la suppression' });
+    }
+  });
+
+  // Upload de fichier vers Azure Blob Storage
+  app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
+    try {
+      const file = req.file;
+      if (!file) return res.status(400).json({ error: 'Aucun fichier envoyé' });
+      const blobName = await uploadBlob(file.originalname, file.buffer);
+      const url = getBlobSasUrl(blobName);
+      res.json({ url, name: blobName });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Nouvelle route pour lister les fichiers avec liens SAS
+  app.get('/files', isAuthenticated, async (req, res) => {
+    try {
+      const blobs = await listBlobs();
+      const files = blobs.map(name => ({
+        name,
+        url: getBlobSasUrl(name)
+      }));
+      res.json(files);
+    } catch (err) {
+      console.error('Erreur /files :', err); // <-- Ajoute ce log
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Supprimer un fichier
+  app.delete('/files/:name', isAuthenticated, async (req, res) => {
+    try {
+      const blobName = decodeURIComponent(req.params.name);
+      await deleteBlob(blobName);
+      res.json({ message: 'Fichier supprimé' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   });
 

@@ -10,5 +10,4 @@ FROM node:18-alpine
 WORKDIR /app
 COPY --from=build /app .
 ENV NODE_ENV=production
-RUN npm install cors
 CMD ["node", "server.js"]
