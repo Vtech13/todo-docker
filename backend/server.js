@@ -244,8 +244,8 @@ function setupRoutes() {
             { expiresIn: '24h' }
         );
 
-        // Rediriger vers le frontend avec le token
-        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/google/callback?token=${token}`);
+        // Rediriger vers la racine du frontend avec le token
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/?token=${token}`);
       }
   );
 
