@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 
 function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, setAuthForm, handleAuthChange, handleAuthSubmit, handleGoogleLogin }) {
+  console.log('LoginPage rendu');
   return (
     <div className="auth-bg">
       <div className="auth-container">
@@ -41,7 +42,12 @@ function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, se
             onChange={handleAuthChange}
             required
           />
-          <button type="submit" className="auth-btn" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-btn"
+            disabled={loading}
+            onClick={() => console.log('Bouton submit cliqué')}
+          >
             {loading ? 'Chargement...' : (authMode === 'login' ? 'Connexion' : 'Inscription')}
           </button>
           <button
@@ -201,6 +207,124 @@ function CallbackPage({ setToken, setUser }) {
   );
 }
 
+function AppRoutes({
+  setToken, setUser, setAuthForm, setAuthMode, setLoading, setError,
+  setTasks, setNewTask, setUserState, token, user, tasks, newTask,
+  authMode, authForm, loading, error
+}) {
+  const location = useLocation();
+
+  // Détecte le token dans l'URL à l'arrivée sur /
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlToken = params.get('token');
+    if (urlToken) {
+      setToken(urlToken);
+      localStorage.setItem('token', urlToken);
+      window.history.replaceState({}, document.title, '/');
+    }
+  }, [location.search, setToken]);
+
+  // Redirection automatique selon l'état d'authentification
+  function RequireAuth({ children }) {
+    const location = useLocation();
+    if (!user) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    return children;
+  }
+
+  function RedirectIfAuth({ children }) {
+    if (user) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={
+        <RedirectIfAuth>
+          <LoginPage
+            onAuth={setUser}
+            loading={loading}
+            error={error}
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+            authForm={authForm}
+            setAuthForm={setAuthForm}
+            handleAuthChange={e => setAuthForm({ ...authForm, [e.target.name]: e.target.value })}
+            handleAuthSubmit={e => {
+              e.preventDefault();
+              setLoading(true);
+              setError('');
+              const url = authMode === 'login'
+                ? `${process.env.REACT_APP_API_URL}/auth/login`
+                : `${process.env.REACT_APP_API_URL}/auth/register`;
+              const body = authMode === 'login'
+                ? { email: authForm.email, password: authForm.password }
+                : { email: authForm.email, password: authForm.password, name: authForm.name };
+              fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                credentials: 'include',
+              })
+                .then(res => {
+                  if (!res.ok) throw new Error('Erreur réseau');
+                  return res.json();
+                })
+                .then(data => {
+                  if (data.token) {
+                    setToken(data.token);
+                    localStorage.setItem('token', data.token);
+                    setUser(data.user);
+                    setAuthForm({ email: '', password: '', name: '' });
+                  } else {
+                    setError(data.error || data.message || 'Erreur inconnue');
+                  }
+                })
+                .catch(err => {
+                  setError('Erreur de connexion au serveur');
+                })
+                .finally(() => {
+                  setLoading(false);
+                });
+            }}
+            handleGoogleLogin={() => {
+              window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
+            }}
+          />
+        </RedirectIfAuth>
+      } />
+      <Route path="/" element={
+        <RequireAuth>
+          <TodoPage
+            user={user}
+            tasks={tasks}
+            newTask={newTask}
+            setNewTask={setNewTask}
+            addTask={() => {/* ... */}}
+            updateTask={() => {/* ... */}}
+            deleteTask={() => {/* ... */}}
+            handleLogout={() => {
+              setToken('');
+              setUser(null);
+              setTasks([]);
+              localStorage.removeItem('token');
+            }}
+          />
+        </RequireAuth>
+      } />
+      <Route path="*" element={
+        <div className="auth-bg">
+          <div className="auth-card">404 - Page non trouvée</div>
+        </div>
+      } />
+    </Routes>
+  );
+}
+
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
@@ -328,6 +452,7 @@ function App() {
 
   const handleAuthSubmit = e => {
     e.preventDefault();
+    console.log('handleAuthSubmit appelé');
     setLoading(true);
     setError('');
     
@@ -350,6 +475,7 @@ function App() {
         return res.json();
       })
       .then(data => {
+        console.log('Réponse login:', data);
         if (data.token) {
           setToken(data.token);
           localStorage.setItem('token', data.token);
@@ -397,46 +523,25 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={
-          <RedirectIfAuth>
-            <LoginPage
-              onAuth={setUser}
-              loading={loading}
-              error={error}
-              authMode={authMode}
-              setAuthMode={setAuthMode}
-              authForm={authForm}
-              setAuthForm={setAuthForm}
-              handleAuthChange={handleAuthChange}
-              handleAuthSubmit={handleAuthSubmit}
-              handleGoogleLogin={handleGoogleLogin}
-            />
-          </RedirectIfAuth>
-        } />
-        <Route path="/callback" element={
-          <CallbackPage setToken={setToken} setUser={setUser} />
-        } />
-        <Route path="/" element={
-          <RequireAuth>
-            <TodoPage
-              user={user}
-              tasks={tasks}
-              newTask={newTask}
-              setNewTask={setNewTask}
-              addTask={addTask}
-              updateTask={updateTask}
-              deleteTask={deleteTask}
-              handleLogout={handleLogout}
-            />
-          </RequireAuth>
-        } />
-        <Route path="*" element={
-          <div className="auth-bg">
-            <div className="auth-card">404 - Page non trouvée</div>
-          </div>
-        } />
-      </Routes>
+      <AppRoutes
+        setToken={setToken}
+        setUser={setUser}
+        setAuthForm={setAuthForm}
+        setAuthMode={setAuthMode}
+        setLoading={setLoading}
+        setError={setError}
+        setTasks={setTasks}
+        setNewTask={setNewTask}
+        setUserState={setUser}
+        token={token}
+        user={user}
+        tasks={tasks}
+        newTask={newTask}
+        authMode={authMode}
+        authForm={authForm}
+        loading={loading}
+        error={error}
+      />
     </Router>
   );
 }
