@@ -1,28 +1,27 @@
 services:
-  db:
-    image: mysql:5.7
-    platform: linux/amd64
+  postgres:
+    image: postgres:15
     environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: mydatabase
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - pg_data:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     ports:
       - "5001:5000"
     depends_on:
-      - db
+      - postgres
     environment:
-      DB_HOST: db
+      DB_HOST: postgres
       DB_USER: user
       DB_PASSWORD: password
       DB_NAME: mydatabase
+      DB_PORT: 5432
 
   frontend:
     build: ./frontend/frontend
@@ -34,4 +33,4 @@ services:
       REACT_APP_API_URL: http://backend:5000
 
 volumes:
-  mysql_data:
+  pg_data:

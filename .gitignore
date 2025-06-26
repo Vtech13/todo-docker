@@ -1,0 +1,252 @@
+# ================================
+# GENERAL
+# ================================
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ================================
+# BACKEND (Node.js)
+# ================================
+
+# Dependencies
+backend/node_modules/
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.development.local
+backend/.env.test.local
+backend/.env.production.local
+
+# Runtime data
+backend/pids
+backend/*.pid
+backend/*.seed
+backend/*.pid.lock
+
+# Coverage directory used by tools like istanbul
+backend/coverage/
+backend/nyc_output/
+
+# Grunt intermediate storage
+backend/.grunt
+
+# Bower dependency directory
+backend/bower_components
+
+# node-waf configuration
+backend/.lock-wscript
+
+# Compiled binary addons
+backend/build/Release
+
+# Dependency directories
+backend/jspm_packages/
+
+# TypeScript v1 declaration files
+backend/typings/
+
+# TypeScript cache
+backend/*.tsbuildinfo
+
+# Optional npm cache directory
+backend/.npm
+
+# Optional eslint cache
+backend/.eslintcache
+
+# Optional REPL history
+backend/.node_repl_history
+
+# Output of 'npm pack'
+backend/*.tgz
+
+# Yarn Integrity file
+backend/.yarn-integrity
+
+# parcel-bundler cache
+backend/.cache
+backend/.parcel-cache
+
+# next.js build output
+backend/.next
+
+# nuxt.js build output
+backend/.nuxt
+
+# vuepress build output
+backend/.vuepress/dist
+
+# Serverless directories
+backend/.serverless/
+
+# FuseBox cache
+backend/.fusebox/
+
+# DynamoDB Local files
+backend/.dynamodb/
+
+# TernJS port file
+backend/.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+backend/.vscode-test
+
+# Database files
+backend/*.sqlite
+backend/*.sqlite3
+backend/*.db
+
+# Uploads directory
+backend/uploads/
+backend/public/uploads/
+
+# ================================
+# FRONTEND (React/Vue/Angular)
+# ================================
+
+# Dependencies
+frontend/node_modules/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Production builds
+frontend/build/
+frontend/dist/
+frontend/out/
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Cache directories
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.next/
+frontend/.nuxt/
+frontend/.vuepress/dist/
+
+# Testing
+frontend/coverage/
+frontend/.nyc_output/
+
+# Storybook build outputs
+frontend/storybook-static/
+
+# Temporary folders
+frontend/tmp/
+frontend/temp/
+
+# ================================
+# REACT SPECIFIC
+# ================================
+frontend/src/**/*.css.map
+frontend/src/**/*.scss.map
+
+# ================================
+# ANGULAR SPECIFIC
+# ================================
+frontend/e2e/
+frontend/*.tgz
+frontend/.angular/
+
+# ================================
+# VUE SPECIFIC
+# ================================
+frontend/.eslintrc.js
+
+# ================================
+# GLOBAL NODE_MODULES (if at root)
+# ================================
+node_modules/
+
+# ================================
+# SECURITY & SECRETS
+# ================================
+
+# API Keys and secrets
+*.pem
+*.key
+*.crt
+*.p12
+.secret
+secrets/
+config/secrets/
+
+# Database dumps
+*.sql
+*.dump
+
+# ================================
+# MISC
+# ================================
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ================================
+# PROJECT SPECIFIC
+# ================================
+
+# Documentation builds
+docs/build/
+docs/_build/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
