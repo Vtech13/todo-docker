@@ -42,12 +42,13 @@ function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, se
             required
           />
           <button type="submit" className="auth-btn" disabled={loading}>
-            {authMode === 'login' ? 'Connexion' : 'Inscription'}
+            {loading ? 'Chargement...' : (authMode === 'login' ? 'Connexion' : 'Inscription')}
           </button>
           <button
             type="button"
             className="auth-switch"
             onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+            disabled={loading}
           >
             {authMode === 'login' ? "Créer un compte" : "J'ai déjà un compte"}
           </button>
@@ -55,6 +56,7 @@ function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, se
             type="button"
             className="google-btn"
             onClick={handleGoogleLogin}
+            disabled={loading}
           >
             Connexion avec Google
           </button>
@@ -66,42 +68,81 @@ function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, se
 }
 
 function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, deleteTask, handleLogout }) {
+  const handleAddTask = () => {
+    if (newTask.trim()) {
+      addTask();
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleAddTask();
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>To-Do List</h1>
         <div style={{ marginBottom: 20 }}>
-          <span>Connecté en tant que <b>{user.name || user.email}</b></span>
+          <span>Connecté en tant que <b>{user?.name || user?.email}</b></span>
           <button style={{ marginLeft: 10 }} onClick={handleLogout}>Déconnexion</button>
         </div>
-        <input
-          type="text"
-          value={newTask}
-          onChange={e => setNewTask(e.target.value)}
-          placeholder="Nouvelle tâche"
-        />
-        <button onClick={addTask}>Ajouter</button>
-        <ul>
+        <div style={{ marginBottom: 20 }}>
+          <input
+            type="text"
+            value={newTask}
+            onChange={e => setNewTask(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Nouvelle tâche"
+            style={{ marginRight: 10, padding: '8px' }}
+          />
+          <button onClick={handleAddTask} disabled={!newTask.trim()}>
+            Ajouter
+          </button>
+        </div>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
           {tasks.map(task => (
-            <li key={task.id}>
+            <li key={task.id} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: 10,
+              padding: '10px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '5px'
+            }}>
               <input
                 type="checkbox"
-                checked={task.completed}
+                checked={task.completed || false}
                 onChange={() =>
                   updateTask(task.id, { ...task, completed: !task.completed })
                 }
+                style={{ marginRight: 10 }}
               />
               <input
                 type="text"
-                value={task.title}
+                value={task.title || ''}
                 onChange={e =>
                   updateTask(task.id, { ...task, title: e.target.value })
                 }
+                style={{ 
+                  flex: 1, 
+                  marginRight: 10, 
+                  padding: '5px',
+                  textDecoration: task.completed ? 'line-through' : 'none'
+                }}
               />
-              <button onClick={() => deleteTask(task.id)}>Supprimer</button>
+              <button onClick={() => deleteTask(task.id)} style={{ padding: '5px 10px' }}>
+                Supprimer
+              </button>
             </li>
           ))}
         </ul>
+        {tasks.length === 0 && (
+          <p style={{ fontStyle: 'italic', color: '#666' }}>
+            Aucune tâche pour le moment. Ajoutez-en une !
+          </p>
+        )}
       </header>
     </div>
   );
@@ -110,30 +151,54 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
 function CallbackPage({ setToken, setUser }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [error, setError] = useState('');
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const googleToken = params.get('token');
+    
     if (googleToken) {
       setToken(googleToken);
       localStorage.setItem('token', googleToken);
+      
       // Authentifier l'utilisateur avant de rediriger
       fetch(`${process.env.REACT_APP_API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${googleToken}` },
         credentials: 'include',
       })
-        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(res => {
+          if (!res.ok) throw new Error('Échec de l\'authentification');
+          return res.json();
+        })
         .then(data => {
           setUser(data.user);
           navigate('/', { replace: true });
         })
-        .catch(() => {
-          navigate('/login', { replace: true });
+        .catch(err => {
+          console.error('Erreur lors de l\'authentification:', err);
+          setError('Erreur lors de la connexion Google');
+          setTimeout(() => navigate('/login', { replace: true }), 2000);
         });
     } else {
-      navigate('/login', { replace: true });
+      setError('Token manquant');
+      setTimeout(() => navigate('/login', { replace: true }), 2000);
     }
   }, [location, setToken, setUser, navigate]);
-  return <div className="auth-bg"><div className="auth-card">Connexion Google en cours...</div></div>;
+
+  return (
+    <div className="auth-bg">
+      <div className="auth-card">
+        {error ? (
+          <div>
+            <p style={{ color: 'red' }}>{error}</p>
+            <p>Redirection vers la page de connexion...</p>
+          </div>
+        ) : (
+          <p>Connexion Google en cours...</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -153,9 +218,13 @@ function App() {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
-        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(res => {
+          if (!res.ok) throw new Error('Token invalide');
+          return res.json();
+        })
         .then(data => setUser(data.user))
-        .catch(() => {
+        .catch(err => {
+          console.error('Erreur de vérification du token:', err);
           setUser(null);
           setToken('');
           localStorage.removeItem('token');
@@ -165,31 +234,49 @@ function App() {
 
   // Récupère les tâches si connecté
   useEffect(() => {
-    if (token) {
+    if (token && user) {
       fetch(`${process.env.REACT_APP_API_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
-        .then(response => response.json())
-        .then(data => setTasks(data));
+        .then(response => {
+          if (!response.ok) throw new Error('Erreur lors du chargement des tâches');
+          return response.json();
+        })
+        .then(data => setTasks(Array.isArray(data) ? data : []))
+        .catch(err => {
+          console.error('Erreur lors du chargement des tâches:', err);
+          setTasks([]);
+        });
     } else {
       setTasks([]);
     }
-  }, [token]);
+  }, [token, user]);
 
   const addTask = () => {
+    if (!newTask.trim()) return;
+
     fetch(`${process.env.REACT_APP_API_URL}/tasks`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ title: newTask }),
+      body: JSON.stringify({ title: newTask.trim() }),
       credentials: 'include',
     })
-      .then(response => response.json())
-      .then(task => setTasks([...tasks, task]));
-    setNewTask('');
+      .then(response => {
+        if (!response.ok) throw new Error('Erreur lors de l\'ajout de la tâche');
+        return response.json();
+      })
+      .then(task => {
+        setTasks(prevTasks => [...prevTasks, task]);
+        setNewTask('');
+      })
+      .catch(err => {
+        console.error('Erreur lors de l\'ajout de la tâche:', err);
+        alert('Erreur lors de l\'ajout de la tâche');
+      });
   };
 
   const updateTask = (id, updatedTask) => {
@@ -201,9 +288,22 @@ function App() {
       },
       body: JSON.stringify(updatedTask),
       credentials: 'include',
-    }).then(() => {
-      setTasks(tasks.map(task => (task.id === id ? { ...task, ...updatedTask } : task)));
-    });
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+        return response.json();
+      })
+      .then(() => {
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === id ? { ...task, ...updatedTask } : task
+          )
+        );
+      })
+      .catch(err => {
+        console.error('Erreur lors de la mise à jour:', err);
+        alert('Erreur lors de la mise à jour de la tâche');
+      });
   };
 
   const deleteTask = id => {
@@ -211,9 +311,15 @@ function App() {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
       credentials: 'include',
-    }).then(() => {
-      setTasks(tasks.filter(task => task.id !== id));
-    });
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Erreur lors de la suppression');
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+      })
+      .catch(err => {
+        console.error('Erreur lors de la suppression:', err);
+        alert('Erreur lors de la suppression de la tâche');
+      });
   };
 
   const handleAuthChange = e => {
@@ -224,33 +330,40 @@ function App() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const url =
-      authMode === 'login'
-        ? `${process.env.REACT_APP_API_URL}/auth/login`
-        : `${process.env.REACT_APP_API_URL}/auth/register`;
-    const body =
-      authMode === 'login'
-        ? { email: authForm.email, password: authForm.password }
-        : { email: authForm.email, password: authForm.password, name: authForm.name };
+    
+    const url = authMode === 'login'
+      ? `${process.env.REACT_APP_API_URL}/auth/login`
+      : `${process.env.REACT_APP_API_URL}/auth/register`;
+    
+    const body = authMode === 'login'
+      ? { email: authForm.email, password: authForm.password }
+      : { email: authForm.email, password: authForm.password, name: authForm.name };
+    
     fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       credentials: 'include',
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Erreur réseau');
+        return res.json();
+      })
       .then(data => {
         if (data.token) {
           setToken(data.token);
           localStorage.setItem('token', data.token);
           setUser(data.user);
+          setAuthForm({ email: '', password: '', name: '' });
         } else {
-          setError(data.error || 'Erreur inconnue');
+          setError(data.error || data.message || 'Erreur inconnue');
         }
-        setLoading(false);
       })
-      .catch(() => {
-        setError('Erreur serveur');
+      .catch(err => {
+        console.error('Erreur d\'authentification:', err);
+        setError('Erreur de connexion au serveur');
+      })
+      .finally(() => {
         setLoading(false);
       });
   };
@@ -258,6 +371,7 @@ function App() {
   const handleLogout = () => {
     setToken('');
     setUser(null);
+    setTasks([]);
     localStorage.removeItem('token');
   };
 
@@ -300,7 +414,9 @@ function App() {
             />
           </RedirectIfAuth>
         } />
-        <Route path="/callback" element={<CallbackPage setToken={setToken} setUser={setUser} />} />
+        <Route path="/callback" element={
+          <CallbackPage setToken={setToken} setUser={setUser} />
+        } />
         <Route path="/" element={
           <RequireAuth>
             <TodoPage
@@ -315,7 +431,11 @@ function App() {
             />
           </RequireAuth>
         } />
-        <Route path="*" element={<div className="auth-bg"><div className="auth-card">404 - Page non trouvée</div></div>} />
+        <Route path="*" element={
+          <div className="auth-bg">
+            <div className="auth-card">404 - Page non trouvée</div>
+          </div>
+        } />
       </Routes>
     </Router>
   );
