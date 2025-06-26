@@ -1,3 +1,9 @@
+version: '3.8'
+
+networks:
+  todoDocker:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:15
@@ -9,6 +15,8 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+    networks:
+      - todoDocker
 
   backend:
     build: ./backend
@@ -22,6 +30,8 @@ services:
       DB_PASSWORD: password
       DB_NAME: mydatabase
       DB_PORT: 5432
+    networks:
+      - todoDocker
 
   frontend:
     build: ./frontend/frontend
@@ -31,6 +41,8 @@ services:
       - backend
     environment:
       REACT_APP_API_URL: http://backend:5000
+    networks:
+      - todoDocker
 
 volumes:
   pg_data:
