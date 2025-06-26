@@ -139,7 +139,6 @@ const authenticateToken = (req, res, next) => {
 
 // Middleware pour vérifier l'authentification (session ou token)
 const isAuthenticated = (req, res, next) => {
-  // Vérifier d'abord le token JWT
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -148,11 +147,14 @@ const isAuthenticated = (req, res, next) => {
       if (!err) {
         req.user = user;
         return next();
+      } else {
+        // Token invalide, on renvoie 401 et on arrête tout
+        return res.status(401).json({ error: 'Authentification requise' });
       }
     });
+    return; // On ne continue pas plus loin, la réponse sera envoyée dans le callback
   }
 
-  // Sinon vérifier la session
   if (req.isAuthenticated && req.isAuthenticated()) {
     return next();
   }

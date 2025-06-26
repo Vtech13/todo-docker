@@ -74,6 +74,25 @@ function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, se
 }
 
 function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, deleteTask, handleLogout }) {
+  const inputRef = React.useRef(null);
+  const [editingId, setEditingId] = React.useState(null);
+  const [editValue, setEditValue] = React.useState('');
+  const editInputRef = React.useRef(null);
+
+  // Focus automatique sur l'input de création de tâche
+  React.useEffect(() => {
+    if (inputRef.current && newTask === '' && editingId === null) {
+      inputRef.current.focus();
+    }
+  }, [newTask, editingId]);
+
+  // Focus automatique sur l'input d'édition
+  React.useEffect(() => {
+    if (editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingId]);
+
   const handleAddTask = () => {
     if (newTask.trim()) {
       addTask();
@@ -86,70 +105,90 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
     }
   };
 
+  const startEdit = (task) => {
+    setEditingId(task.id);
+    setEditValue(task.title);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const validateEdit = (task) => {
+    if (editValue.trim() && editValue !== task.title) {
+      updateTask(task.id, { ...task, title: editValue });
+    }
+    setEditingId(null);
+    setEditValue('');
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>To-Do List</h1>
-        <div style={{ marginBottom: 20 }}>
+    <div className="App" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)' }}>
+      <header className="App-header" style={{ background: 'none', minHeight: 'unset', color: '#282c34', boxShadow: 'none', marginBottom: 0 }}>
+        <h1 style={{ margin: '40px 0 10px 0', fontWeight: 700, fontSize: '2.2rem', color: '#6366f1' }}>To-Do List</h1>
+        <div style={{ marginBottom: 10, fontSize: '1rem', color: '#334155' }}>
           <span>Connecté en tant que <b>{user?.name || user?.email}</b></span>
-          <button style={{ marginLeft: 10 }} onClick={handleLogout}>Déconnexion</button>
+          <button style={{ marginLeft: 16, background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 16px', cursor: 'pointer', fontWeight: 500 }} onClick={handleLogout}>Déconnexion</button>
         </div>
-        <div style={{ marginBottom: 20 }}>
-          <input
-            type="text"
-            value={newTask}
-            onChange={e => setNewTask(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Nouvelle tâche"
-            style={{ marginRight: 10, padding: '8px' }}
-          />
-          <button onClick={handleAddTask} disabled={!newTask.trim()}>
-            Ajouter
-          </button>
-        </div>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {tasks.map(task => (
-            <li key={task.id} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              marginBottom: 10,
-              padding: '10px',
-              backgroundColor: '#f5f5f5',
-              borderRadius: '5px'
-            }}>
-              <input
-                type="checkbox"
-                checked={task.completed || false}
-                onChange={() =>
-                  updateTask(task.id, { ...task, completed: !task.completed })
-                }
-                style={{ marginRight: 10 }}
-              />
-              <input
-                type="text"
-                value={task.title || ''}
-                onChange={e =>
-                  updateTask(task.id, { ...task, title: e.target.value })
-                }
-                style={{ 
-                  flex: 1, 
-                  marginRight: 10, 
-                  padding: '5px',
-                  textDecoration: task.completed ? 'line-through' : 'none'
-                }}
-              />
-              <button onClick={() => deleteTask(task.id)} style={{ padding: '5px 10px' }}>
-                Supprimer
-              </button>
-            </li>
-          ))}
-        </ul>
-        {tasks.length === 0 && (
-          <p style={{ fontStyle: 'italic', color: '#666' }}>
-            Aucune tâche pour le moment. Ajoutez-en une !
-          </p>
-        )}
       </header>
+      <main style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: '70vh', marginTop: 0 }}>
+        <div className="todo-card" style={{ background: 'white', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 32, minWidth: 340, maxWidth: 420, width: '100%', marginTop: 32 }}>
+          {/* Champ d'ajout de tâche */}
+          <form onSubmit={e => { e.preventDefault(); handleAddTask(); }} style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+            <input
+              type="text"
+              ref={inputRef}
+              value={newTask}
+              onChange={e => setNewTask(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Nouvelle tâche..."
+              style={{ flex: 1, padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '1rem', background: '#f8fafc' }}
+              disabled={editingId !== null}
+            />
+            <button type="submit" disabled={!newTask.trim() || editingId !== null} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '10px 18px', fontSize: '1rem', cursor: (!newTask.trim() || editingId !== null) ? 'not-allowed' : 'pointer', fontWeight: 500 }}>
+              Ajouter
+            </button>
+          </form>
+
+          {/* Liste des tâches */}
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {tasks.map(task => (
+              <li key={task.id} style={{ background: '#f8fafc', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.03)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {editingId === task.id ? (
+                  <>
+                    <input
+                      type="text"
+                      ref={editInputRef}
+                      value={editValue}
+                      onChange={e => setEditValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') validateEdit(task);
+                        if (e.key === 'Escape') cancelEdit();
+                      }}
+                      style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '1rem', background: 'white' }}
+                    />
+                    <button onClick={() => validateEdit(task)} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Valider</button>
+                    <button onClick={cancelEdit} style={{ background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Annuler</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, fontSize: '1.05rem', color: '#334155', textAlign: 'left', wordBreak: 'break-word', padding: '2px 0' }}>{task.title}</span>
+                    <button onClick={() => startEdit(task)} style={{ background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Modifier</button>
+                  </>
+                )}
+                <button onClick={() => deleteTask(task.id)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, cursor: 'pointer' }}>Supprimer</button>
+              </li>
+            ))}
+          </ul>
+
+          {tasks.length === 0 && (
+            <p style={{ fontStyle: 'italic', color: '#64748b', marginTop: 18, textAlign: 'center' }}>
+              Aucune tâche pour le moment. Ajoutez-en une !
+            </p>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
@@ -207,10 +246,27 @@ function CallbackPage({ setToken, setUser }) {
   );
 }
 
+// Déplace ces deux fonctions en dehors de AppRoutes
+function RequireAuth({ user, children }) {
+  const location = useLocation();
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return children;
+}
+
+function RedirectIfAuth({ user, children }) {
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function AppRoutes({
   setToken, setUser, setAuthForm, setAuthMode, setLoading, setError,
   setTasks, setNewTask, setUserState, token, user, tasks, newTask,
-  authMode, authForm, loading, error
+  authMode, authForm, loading, error,
+  addTask, updateTask, deleteTask
 }) {
   const location = useLocation();
 
@@ -225,26 +281,10 @@ function AppRoutes({
     }
   }, [location.search, setToken]);
 
-  // Redirection automatique selon l'état d'authentification
-  function RequireAuth({ children }) {
-    const location = useLocation();
-    if (!user) {
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-    return children;
-  }
-
-  function RedirectIfAuth({ children }) {
-    if (user) {
-      return <Navigate to="/" replace />;
-    }
-    return children;
-  }
-
   return (
     <Routes>
       <Route path="/login" element={
-        <RedirectIfAuth>
+        <RedirectIfAuth user={user}>
           <LoginPage
             onAuth={setUser}
             loading={loading}
@@ -298,15 +338,15 @@ function AppRoutes({
         </RedirectIfAuth>
       } />
       <Route path="/" element={
-        <RequireAuth>
+        <RequireAuth user={user}>
           <TodoPage
             user={user}
             tasks={tasks}
             newTask={newTask}
             setNewTask={setNewTask}
-            addTask={() => {/* ... */}}
-            updateTask={() => {/* ... */}}
-            deleteTask={() => {/* ... */}}
+            addTask={addTask}
+            updateTask={updateTask}
+            deleteTask={deleteTask}
             handleLogout={() => {
               setToken('');
               setUser(null);
@@ -505,22 +545,6 @@ function App() {
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
   };
 
-  // Redirection automatique selon l'état d'authentification
-  function RequireAuth({ children }) {
-    const location = useLocation();
-    if (!user) {
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-    return children;
-  }
-
-  function RedirectIfAuth({ children }) {
-    if (user) {
-      return <Navigate to="/" replace />;
-    }
-    return children;
-  }
-
   return (
     <Router>
       <AppRoutes
@@ -541,6 +565,9 @@ function App() {
         authForm={authForm}
         loading={loading}
         error={error}
+        addTask={addTask}
+        updateTask={updateTask}
+        deleteTask={deleteTask}
       />
     </Router>
   );
