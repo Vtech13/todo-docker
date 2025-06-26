@@ -155,6 +155,14 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {tasks.map(task => (
               <li key={task.id} style={{ background: '#f8fafc', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.03)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* Checkbox pour marquer comme fait */}
+                <input
+                  type="checkbox"
+                  checked={!!task.completed}
+                  onChange={() => updateTask(task.id, { ...task, completed: !task.completed })}
+                  style={{ marginRight: 10, width: 18, height: 18, accentColor: '#6366f1', cursor: 'pointer' }}
+                  disabled={editingId === task.id}
+                />
                 {editingId === task.id ? (
                   <>
                     <input
@@ -173,7 +181,7 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
                   </>
                 ) : (
                   <>
-                    <span style={{ flex: 1, fontSize: '1.05rem', color: '#334155', textAlign: 'left', wordBreak: 'break-word', padding: '2px 0' }}>{task.title}</span>
+                    <span style={{ flex: 1, fontSize: '1.05rem', color: task.completed ? '#94a3b8' : '#334155', textAlign: 'left', wordBreak: 'break-word', padding: '2px 0', textDecoration: task.completed ? 'line-through' : 'none', opacity: task.completed ? 0.7 : 1 }}>{task.title}</span>
                     <button onClick={() => startEdit(task)} style={{ background: '#f1f5f9', color: '#6366f1', border: 'none', borderRadius: 6, padding: '7px 14px', fontWeight: 500, marginRight: 2, cursor: 'pointer' }}>Modifier</button>
                   </>
                 )}
