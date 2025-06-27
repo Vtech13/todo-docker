@@ -131,58 +131,58 @@ backend/public/uploads/
 # ================================
 
 # Dependencies
-frontend/node_modules/
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+*/frontend/node_modules/
+*/frontend/npm-debug.log*
+*/frontend/yarn-debug.log*
+*/frontend/yarn-error.log*
 
 # Production builds
-frontend/build/
-frontend/dist/
-frontend/out/
+*/frontend/build/
+*/frontend/dist/
+*/frontend/out/
 
 # Environment variables
-frontend/.env
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
+*/frontend/.env
+*/frontend/.env.local
+*/frontend/.env.development.local
+*/frontend/.env.test.local
+*/frontend/.env.production.local
 
 # Cache directories
-frontend/.cache/
-frontend/.parcel-cache/
-frontend/.next/
-frontend/.nuxt/
-frontend/.vuepress/dist/
+*/frontend/.cache/
+*/frontend/.parcel-cache/
+*/frontend/.next/
+*/frontend/.nuxt/
+*/frontend/.vuepress/dist/
 
 # Testing
-frontend/coverage/
-frontend/.nyc_output/
+*/frontend/coverage/
+*/frontend/.nyc_output/
 
 # Storybook build outputs
-frontend/storybook-static/
+*/frontend/storybook-static/
 
 # Temporary folders
-frontend/tmp/
-frontend/temp/
+*/frontend/tmp/
+*/frontend/temp/
 
 # ================================
 # REACT SPECIFIC
 # ================================
-frontend/src/**/*.css.map
-frontend/src/**/*.scss.map
+*/frontend/src/**/*.css.map
+*/frontend/src/**/*.scss.map
 
 # ================================
 # ANGULAR SPECIFIC
 # ================================
-frontend/e2e/
-frontend/*.tgz
-frontend/.angular/
+*/frontend/e2e/
+*/frontend/*.tgz
+*/frontend/.angular/
 
 # ================================
 # VUE SPECIFIC
 # ================================
-frontend/.eslintrc.js
+*/frontend/.eslintrc.js
 
 # ================================
 # GLOBAL NODE_MODULES (if at root)
