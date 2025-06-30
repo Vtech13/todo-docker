@@ -84,12 +84,12 @@ resource "azurerm_storage_account" "todo-docker" {
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  allow_blob_public_access = false
+  public_network_access_enabled = false
 }
 
 resource "azurerm_storage_container" "todo-docker" {
   name                  = "blob"
-  storage_account_name  = azurerm_storage_account.todo-docker.name
+  storage_account_id    = azurerm_storage_account.todo-docker.id
   container_access_type = "private"
 }
 
@@ -114,6 +114,17 @@ resource "azurerm_container_app" "todo-docker_frontend" {
   revision_mode                = "Single"
   max_inactive_revisions       = 0
 
+  registry {
+    server               = "docker.io"
+    username            = var.dockerhub_user
+    password_secret_name = "dockerhub-password"
+  }
+
+  secret {
+    name  = "dockerhub-password"
+    value = var.dockerhub_password
+  }
+
   template {
     min_replicas = 1
     max_replicas = 3
@@ -122,6 +133,10 @@ resource "azurerm_container_app" "todo-docker_frontend" {
       image  = var.dockerhub_frontend_image
       cpu    = 0.5
       memory = "1.0Gi"
+      env {
+        name  = "REACT_APP_API_URL"
+        value = "https://${azurerm_container_app.todo-docker_api.ingress[0].fqdn}"
+      }
       dynamic "env" {
         for_each = var.frontend_env
         content {
@@ -149,6 +164,17 @@ resource "azurerm_container_app" "todo-docker_api" {
   revision_mode                = "Single"
   max_inactive_revisions       = 0
 
+  registry {
+    server               = "docker.io"
+    username            = var.dockerhub_user
+    password_secret_name = "dockerhub-password"
+  }
+
+  secret {
+    name  = "dockerhub-password"
+    value = var.dockerhub_password
+  }
+
   template {
     min_replicas = 1
     max_replicas = 5
@@ -157,8 +183,44 @@ resource "azurerm_container_app" "todo-docker_api" {
       image  = var.dockerhub_backend_image
       cpu    = 0.5
       memory = "1.0Gi"
+      env {
+        name  = "DB_HOST"
+        value = var.backend_env["DB_HOST"]
+      }
+      env {
+        name  = "DB_USER"
+        value = var.backend_env["DB_USER"]
+      }
+      env {
+        name  = "DB_PASSWORD"
+        value = var.backend_env["DB_PASSWORD"]
+      }
+      env {
+        name  = "DB_NAME"
+        value = var.backend_env["DB_NAME"]
+      }
+      env {
+        name  = "DB_PORT"
+        value = var.backend_env["DB_PORT"]
+      }
+      env {
+        name  = "JWT_SECRET"
+        value = var.jwt_secret
+      }
+      env {
+        name  = "SESSION_SECRET"
+        value = var.backend_env["SESSION_SECRET"]
+      }
+      env {
+        name  = "GOOGLE_CLIENT_ID"
+        value = var.backend_env["GOOGLE_CLIENT_ID"]
+      }
+      env {
+        name  = "GOOGLE_CLIENT_SECRET"
+        value = var.backend_env["GOOGLE_CLIENT_SECRET"]
+      }
       dynamic "env" {
-        for_each = var.backend_env
+        for_each = { for k, v in var.backend_env : k => v if !contains(["DB_HOST","DB_USER","DB_PASSWORD","DB_NAME","DB_PORT","SESSION_SECRET","GOOGLE_CLIENT_ID","GOOGLE_CLIENT_SECRET"], k) }
         content {
           name  = env.key
           value = env.value

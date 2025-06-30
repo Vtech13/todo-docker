@@ -1,32 +1,32 @@
 # Déploiement Azure - Stack Todo Docker
 
-Ce dossier contient l'infrastructure as code (IaC) pour déployer la stack Todo (backend Node.js, frontend React, PostgreSQL, Azure Blob) sur Microsoft Azure avec Terraform.
+Ce dossier contient l'infrastructure as code (IaC) pour déployer la stack Todo (backend Node.js, frontend React, PostgreSQL, Azure Blob) sur Microsoft Azure avec Opentofu.
 
 ## Prérequis
-- [Terraform](https://www.terraform.io/downloads.html)
+- [Opentofu](https://opentofu.org/docs/intro/install/windows/)
 - Un compte Azure avec droits suffisants
 - Azure CLI (optionnel, pour vérifier l'abonnement)
 
 ## Déploiement
 
-1. **Initialiser Terraform**
+1. **Initialiser Tofu**
    ```bash
    cd infra
-   terraform init
+   tofu init
    ```
 
 2. **Configurer les variables**
    - Modifie le fichier `terraform.tfvars` si besoin (images Docker, secrets, etc.)
    - Vérifie que `subscription_id` correspond à ton abonnement Azure
 
-3. **Appliquer le plan Terraform**
+3. **Appliquer le plan Opentofu**
    ```bash
-   terraform apply
+   tofu apply
    ```
    - Accepte la création des ressources
 
 4. **Récupérer les outputs**
-   À la fin, Terraform affichera :
+   À la fin, Opentofu affichera :
    - URL du frontend (FQDN Azure)
    - URL du backend (FQDN Azure)
    - FQDN PostgreSQL
@@ -34,7 +34,7 @@ Ce dossier contient l'infrastructure as code (IaC) pour déployer la stack Todo 
 
    Tu peux aussi les retrouver à tout moment avec :
    ```bash
-   terraform output
+   Opentofu output
    ```
 
 5. **Configurer les variables d'environnement des apps**
@@ -57,7 +57,7 @@ Ce dossier contient l'infrastructure as code (IaC) pour déployer la stack Todo 
      GOOGLE_CLIENT_SECRET=<google_client_secret>
      ```
 
-   > Remplace les valeurs par celles affichées dans les outputs Terraform et dans `terraform.tfvars`.
+   > Remplace les valeurs par celles affichées dans les outputs Opentofu et dans `terraform.tfvars`.
 
 6. **(Optionnel) Relancer le build/déploiement des apps**
 
@@ -67,7 +67,7 @@ Ce dossier contient l'infrastructure as code (IaC) pour déployer la stack Todo 
 - Pour changer d'abonnement Azure, modifie la variable `subscription_id` dans `terraform.tfvars`.
 - Pour détruire l'infra :
   ```bash
-  terraform destroy
+  Opentofu destroy
   ```
 
 ---

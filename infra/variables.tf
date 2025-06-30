@@ -11,6 +11,12 @@ variable "dockerhub_user" {
   type        = string
 }
 
+variable "dockerhub_password" {
+  description = "Mot de passe Docker Hub pour l'authentification."
+  type        = string
+  sensitive   = true
+}
+
 variable "dockerhub_frontend_image" {
   description = "Nom de l'image Docker du frontend sur Docker Hub."
   type        = string

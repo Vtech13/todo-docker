@@ -9,6 +9,9 @@ import {
   useLocation
 } from 'react-router-dom';
 
+// Définir l'URL de l'API dynamiquement selon l'environnement
+const API_URL = window.REACT_APP_API_URL || process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
 function LoginPage({ onAuth, loading, error, authMode, setAuthMode, authForm, setAuthForm, handleAuthChange, handleAuthSubmit, handleGoogleLogin }) {
   console.log('LoginPage rendu');
   return (
@@ -98,7 +101,7 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`${process.env.REACT_APP_API_URL}/files`, {
+      fetch(`${API_URL}/files`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -176,7 +179,7 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
                 const token = localStorage.getItem('token');
                 const formData = new FormData();
                 formData.append('file', file);
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/upload`, {
+                const response = await fetch(`${API_URL}/upload`, {
                   method: 'POST',
                   headers: { Authorization: `Bearer ${token}` },
                   body: formData,
@@ -255,7 +258,7 @@ function TodoPage({ user, tasks, newTask, setNewTask, addTask, updateTask, delet
                       onClick={async () => {
                         const token = localStorage.getItem('token');
                         if (window.confirm('Supprimer ce fichier ?')) {
-                          await fetch(`${process.env.REACT_APP_API_URL}/files/${encodeURIComponent(f.name)}`, {
+                          await fetch(`${API_URL}/files/${encodeURIComponent(f.name)}`, {
                             method: 'DELETE',
                             headers: { Authorization: `Bearer ${token}` }
                           });
@@ -290,7 +293,7 @@ function CallbackPage({ setToken, setUser }) {
       localStorage.setItem('token', googleToken);
       
       // Authentifier l'utilisateur avant de rediriger
-      fetch(`${process.env.REACT_APP_API_URL}/auth/me`, {
+      fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${googleToken}` },
         credentials: 'include',
       })
@@ -382,8 +385,8 @@ function AppRoutes({
               setLoading(true);
               setError('');
               const url = authMode === 'login'
-                ? `${process.env.REACT_APP_API_URL}/auth/login`
-                : `${process.env.REACT_APP_API_URL}/auth/register`;
+                ? `${API_URL}/auth/login`
+                : `${API_URL}/auth/register`;
               const body = authMode === 'login'
                 ? { email: authForm.email, password: authForm.password }
                 : { email: authForm.email, password: authForm.password, name: authForm.name };
@@ -415,7 +418,7 @@ function AppRoutes({
                 });
             }}
             handleGoogleLogin={() => {
-              window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
+              window.location.href = `${API_URL}/auth/google`;
             }}
           />
         </RedirectIfAuth>
@@ -461,7 +464,7 @@ function App() {
   // Vérifie le token au chargement
   useEffect(() => {
     if (token) {
-      fetch(`${process.env.REACT_APP_API_URL}/auth/me`, {
+      fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
@@ -482,7 +485,7 @@ function App() {
   // Récupère les tâches si connecté
   useEffect(() => {
     if (token && user) {
-      fetch(`${process.env.REACT_APP_API_URL}/tasks`, {
+      fetch(`${API_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
@@ -503,7 +506,7 @@ function App() {
   const addTask = () => {
     if (!newTask.trim()) return;
 
-    fetch(`${process.env.REACT_APP_API_URL}/tasks`, {
+    fetch(`${API_URL}/tasks`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -527,7 +530,7 @@ function App() {
   };
 
   const updateTask = (id, updatedTask) => {
-    fetch(`${process.env.REACT_APP_API_URL}/tasks/${id}`, {
+    fetch(`${API_URL}/tasks/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -554,7 +557,7 @@ function App() {
   };
 
   const deleteTask = id => {
-    fetch(`${process.env.REACT_APP_API_URL}/tasks/${id}`, {
+    fetch(`${API_URL}/tasks/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
       credentials: 'include',
@@ -580,8 +583,8 @@ function App() {
     setError('');
     
     const url = authMode === 'login'
-      ? `${process.env.REACT_APP_API_URL}/auth/login`
-      : `${process.env.REACT_APP_API_URL}/auth/register`;
+      ? `${API_URL}/auth/login`
+      : `${API_URL}/auth/register`;
     
     const body = authMode === 'login'
       ? { email: authForm.email, password: authForm.password }
@@ -625,7 +628,7 @@ function App() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   // À placer dans un composant React
@@ -633,7 +636,7 @@ function App() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/upload`, {
+    const response = await fetch(`${API_URL}/upload`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`
