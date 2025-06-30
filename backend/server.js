@@ -45,7 +45,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
+  callbackURL: "https://todo-api.ashystone-316bcfbb.swedencentral.azurecontainerapps.io/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
