@@ -166,7 +166,7 @@ resource "azurerm_container_app" "todo_api" {
 
   registry {
     server               = "docker.io"
-    username            = var.dockerhub_user
+    username             = var.dockerhub_user
     password_secret_name = "dockerhub-password"
   }
 
