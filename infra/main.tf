@@ -75,6 +75,13 @@ resource "azurerm_postgresql_flexible_server" "todo" {
   depends_on                    = [azurerm_private_dns_zone_virtual_network_link.todo]
 }
 
+resource "azurerm_postgresql_flexible_server_database" "mydatabase" {
+  name      = var.backend_env["DB_NAME"]
+  server_id = azurerm_postgresql_flexible_server.todo.id
+  collation = "en_US.utf8"
+  charset   = "UTF8"
+}
+
 ############################################################
 # 4. Stockage Azure Blob
 ############################################################
@@ -197,11 +204,15 @@ resource "azurerm_container_app" "todo_api" {
       }
       env {
         name  = "DB_NAME"
-        value = var.backend_env["DB_NAME"]
+        value = azurerm_postgresql_flexible_server_database.mydatabase.name
       }
       env {
         name  = "DB_PORT"
         value = var.backend_env["DB_PORT"]
+      }
+      env {
+        name  = "DB_SSL"
+        value = "true"
       }
       env {
         name  = "JWT_SECRET"

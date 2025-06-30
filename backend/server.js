@@ -14,18 +14,25 @@ const { uploadBlob, getBlobSasUrl, listBlobs, deleteBlob } = require('./src/serv
 
 dotenv.config();
 
+// Vérification des variables d'environnement critiques
+['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET', 'SESSION_SECRET'].forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`La variable d'environnement ${key} n'est pas définie !`);
+  }
+});
+
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL,
   credentials: true
 }));
 
 // Configuration des sessions
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false } // true en production avec HTTPS
@@ -83,7 +90,7 @@ const connectWithRetry = () => {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
+    port: process.env.DB_PORT,
     ssl: { rejectUnauthorized: false }
   });
 
@@ -144,7 +151,7 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Token d\'accès requis' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret', (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Token invalide' });
     req.user = user;
     next();
@@ -157,7 +164,7 @@ const isAuthenticated = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret', (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (!err) {
         req.user = user;
         return next();
@@ -198,7 +205,7 @@ function setupRoutes() {
       const user = insertRes.rows[0];
       const token = jwt.sign(
         { id: user.id, email, name },
-        process.env.JWT_SECRET || 'your-jwt-secret',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
       res.status(201).json({
@@ -229,7 +236,7 @@ function setupRoutes() {
       }
       const token = jwt.sign(
         { id: user.id, email: user.email, name: user.name },
-        process.env.JWT_SECRET || 'your-jwt-secret',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
       res.json({
@@ -256,12 +263,12 @@ function setupRoutes() {
         // Générer un JWT pour l'utilisateur Google
         const token = jwt.sign(
             { id: req.user.id, email: req.user.email, name: req.user.name },
-            process.env.JWT_SECRET || 'your-jwt-secret',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
         // Rediriger vers la racine du frontend avec le token
-        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/?token=${token}`);
+        res.redirect(`${process.env.CLIENT_URL}/?token=${token}`);
       }
   );
 
@@ -406,7 +413,7 @@ function setupRoutes() {
     }
   });
 
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`Serveur Node.js en cours d'exécution sur http://localhost:${port}`);
   });
 }
