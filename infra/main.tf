@@ -207,6 +207,18 @@ resource "azurerm_container_app" "todo_api" {
         name  = "JWT_SECRET"
         value = var.jwt_secret
       }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = var.backend_env["AZURE_STORAGE_ACCOUNT_NAME"]
+      }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_KEY"
+        value = var.backend_env["AZURE_STORAGE_ACCOUNT_KEY"]
+      }
+      env {
+        name  = "AZURE_STORAGE_CONTAINER_NAME"
+        value = var.backend_env["AZURE_STORAGE_CONTAINER_NAME"]
+      }
       dynamic "env" {
         for_each = var.backend_env
         content {
