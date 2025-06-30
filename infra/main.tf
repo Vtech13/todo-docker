@@ -66,8 +66,8 @@ resource "azurerm_postgresql_flexible_server" "todo" {
   delegated_subnet_id           = azurerm_subnet.todo_psql_subnet.id
   private_dns_zone_id           = azurerm_private_dns_zone.todo.id
   public_network_access_enabled = false
-  administrator_login           = "psqladmin"
-  administrator_password        = var.postgres_password
+  administrator_login           = var.backend_env["DB_USER"]
+  administrator_password        = var.backend_env["DB_PASSWORD"]
   zone                          = "1"
   storage_mb                    = 32768
   storage_tier                  = "P4"
@@ -189,23 +189,27 @@ resource "azurerm_container_app" "todo_api" {
       }
       env {
         name  = "DB_USER"
-        value = "psqladmin"
+        value = var.backend_env["DB_USER"]
       }
       env {
         name  = "DB_PASSWORD"
-        value = var.postgres_password
+        value = var.backend_env["DB_PASSWORD"]
       }
       env {
         name  = "DB_NAME"
-        value = "mydatabase"
+        value = var.backend_env["DB_NAME"]
       }
       env {
         name  = "DB_PORT"
-        value = "5432"
+        value = var.backend_env["DB_PORT"]
       }
       env {
         name  = "JWT_SECRET"
-        value = var.jwt_secret
+        value = var.backend_env["JWT_SECRET"]
+      }
+      env {
+        name  = "SESSION_SECRET"
+        value = var.backend_env["SESSION_SECRET"]
       }
       env {
         name  = "AZURE_STORAGE_ACCOUNT_NAME"
@@ -218,6 +222,14 @@ resource "azurerm_container_app" "todo_api" {
       env {
         name  = "AZURE_STORAGE_CONTAINER_NAME"
         value = var.backend_env["AZURE_STORAGE_CONTAINER_NAME"]
+      }
+      env {
+        name  = "GOOGLE_CLIENT_ID"
+        value = var.backend_env["GOOGLE_CLIENT_ID"]
+      }
+      env {
+        name  = "GOOGLE_CLIENT_SECRET"
+        value = var.backend_env["GOOGLE_CLIENT_SECRET"]
       }
       dynamic "env" {
         for_each = var.backend_env

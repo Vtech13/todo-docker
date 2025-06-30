@@ -39,16 +39,6 @@ variable "backend_env" {
   default     = {}
 }
 
-variable "postgres_password" {
-  description = "PostgreSQL admin password."
-  sensitive   = true
-}
-
-variable "jwt_secret" {
-  description = "Secret JWT pour le backend."
-  type        = string
-}
-
 variable "storage_account_name" {
   description = "Nom du compte de stockage Azure."
   type        = string
