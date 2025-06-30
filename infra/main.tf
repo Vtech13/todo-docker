@@ -144,13 +144,6 @@ resource "azurerm_container_app" "todo_frontend" {
         name  = "REACT_APP_API_URL"
         value = "https://${azurerm_container_app.todo_api.ingress[0].fqdn}"
       }
-      dynamic "env" {
-        for_each = var.frontend_env
-        content {
-          name  = env.key
-          value = env.value
-        }
-      }
     }
   }
   ingress {
