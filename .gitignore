@@ -42,6 +42,7 @@ backend/.env.local
 backend/.env.development.local
 backend/.env.test.local
 backend/.env.production.local
+infra/terraform.tfvars
 
 # Runtime data
 backend/pids

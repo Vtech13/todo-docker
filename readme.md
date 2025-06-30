@@ -1,94 +1,106 @@
-# Application de Gestion de Tâches (Todo List) avec Docker
+# Todo Docker - Déploiement Azure
 
-## Table des Matières
-- [Introduction](#introduction)
-- [Technologies Utilisées](#technologies-utilisées)
-- [Structure du Projet](#structure-du-projet)
-- [Configuration de l'Environnement](#configuration-de-lenvironnement)
-- [Démarrer le Projet](#démarrer-le-projet)
-- [API](#api)
-- [Tests](#tests)
-- [Documentation des Commandes](#documentation-des-commandes)
-- [Contributions](#contributions)
-- [Licence](#licence)
+Ce projet est une stack complète Todo (Node.js, React, PostgreSQL, Azure Blob) déployée sur Microsoft Azure avec Docker et Terraform.
 
-## Introduction
+## Sommaire
+- [Architecture](#architecture)
+- [Déploiement cloud sur Azure](#déploiement-cicd)
+- [Structure des dossiers](#structure-des-dossiers)
+- [Prérequis](#prérequis)
+- [Déploiement](#déploiement)
+- [Lancement local](#lancement-local)
 
-Cette application de gestion de tâches permet à l'utilisateur d'ajouter et de lister des tâches dans une interface web simple. Elle utilise Node.js pour le backend, React pour le frontend et MySQL pour la persistance des données. L'application est containerisée avec Docker pour faciliter le déploiement et la gestion des dépendances.
+---
 
-## Technologies Utilisées
+## Architecture
 
-- **Backend** : Node.js avec Express.js
-- **Frontend** : React
-- **Base de Données** : Postgre
-- **Containerisation** : Docker et Docker Compose
-
-## Structure du Projet
-
-```
-rendu_15-10-2024/
-├── backend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── package-lock.json
-│   └── index.js
-├── frontend/
-│   ├── Dockerfile
-│   ├── package.json
-│   └── src/
-├── docker-compose.yml
-└── README.md
+```mermaid
+flowchart TD
+    subgraph Azure
+        FE["Frontend (React, Nginx)"]
+        BE["Backend (Node.js, Express)"]
+        DB["PostgreSQL"]
+        BLOB["Blob Storage"]
+    end
+    USER["Utilisateur"] --> FE
+    FE -->|"API REST"| BE
+    BE --> DB
+    BE --> BLOB
+    FE -->|"Assets statiques"| FE
+    BE -->|"OAuth"| GOOGLE["Google Cloud"]
 ```
 
-## Configuration de l'Environnement
+---
 
-### Prérequis
+## Déploiement cloud sur Azure
 
-- **Docker** et **Docker Compose** installés sur votre machine.
+```mermaid
+flowchart TD
+    subgraph "Déploiement Azure"
+        TF["Terraform"] --> AZ["Azure Resource Manager"]
+        AZ -->|"Web App"| FE["Frontend"]
+        AZ -->|"Web App"| BE["Backend"]
+        AZ --> DB["PostgreSQL"]
+        AZ --> BLOB["Blob Storage"]
+    end
+    GIT["Code source (GitHub)"] -->|"CI/CD"| TF
+    USER["Utilisateur"] --> FE
+    FE --> BE
+    BE --> DB
+    BE --> BLOB
+```
 
-### Variables d'Environnement
+---
 
-Le backend se connecte à la base de données MySQL à l'aide des variables d'environnement suivantes, définies dans le fichier `.env` :
-- `DB_HOST`: Nom d'hôte de la base de données (par défaut `db`).
-- `DB_USER`: Nom d'utilisateur de la base de données (par défaut `root`).
-- `DB_PASSWORD`: Mot de passe de l'utilisateur de la base de données (par défaut `example`).
-- `DB_NAME`: Nom de la base de données (par défaut `mydatabase`).
+## Structure des dossiers
 
-## Démarrer le Projet
+- `frontend/frontend/` : Application React + Nginx (conteneur Docker)
+- `backend/` : API Node.js/Express (conteneur Docker)
+- `infra/` : Infrastructure as Code (Terraform pour Azure)
+- `docker-compose.yml` : Lancement local multi-conteneurs
 
-1. Clonez le dépôt :
+---
 
+## Prérequis
+- [Docker](https://www.docker.com/)
+- [Terraform](https://www.terraform.io/)
+- Un compte Azure
+
+---
+
+## Déploiement
+
+1. Initialiser l'infra :
    ```bash
-   git clone <URL_DU_DEPOT>
-   cd rendu_15-10-2024
+   cd infra
+   terraform init
+   terraform apply
    ```
+2. Récupérer les outputs Terraform (URL, secrets, etc.)
+3. Configurer les variables d'environnement dans les apps (`.env`)
+4. Déployer les images Docker sur Azure Web App
 
-2. Démarrez les conteneurs avec Docker Compose :
+Pour plus de détails, voir `infra/README.md`.
 
-   ```bash
-   docker-compose up --build
-   ```
+---
 
-3. Accédez à l'application :
+## Lancement local
 
-   - Frontend : [http://localhost:3000](http://localhost:3000)
-   - Backend (API) : [http://localhost:5001/tasks](http://localhost:5001/tasks)
+Pour tester la stack en local, tu peux utiliser `docker-compose` à la racine du projet :
 
-## API
+```bash
+# À la racine du projet
+docker-compose up --build
+```
 
-### Obtenir toutes les tâches
+Cela va lancer le backend, le frontend et la base de données PostgreSQL dans des conteneurs séparés.
 
-**Endpoint**: `GET /tasks`
+- Les variables d'environnement locales peuvent être définies dans des fichiers `.env` dans les dossiers `backend/` et `frontend/frontend/`.
+- Accède à l'application sur [http://localhost:3000](http://localhost:3000) (frontend) et [http://localhost:4000](http://localhost:4000) (backend).
 
-- Récupère la liste de toutes les tâches.
+Pour arrêter :
+```bash
+docker-compose down
+```
 
-### Ajouter une nouvelle tâche
-
-**Endpoint**: `POST /tasks`
-
-- **Body**: `{ "title": "Titre de la tâche" }`
-- Ajoute une nouvelle tâche à la liste.
-
-## Tests
-
-Pour tester l'application, vous pouvez utiliser un client HTTP (comme Postman) pour vérifier les points de terminaison de l'API. Vous pouvez également interagir directement avec l'interface utilisateur du frontend pour ajouter des tâches.
+---
