@@ -66,7 +66,7 @@ resource "azurerm_postgresql_flexible_server" "todo" {
   delegated_subnet_id           = azurerm_subnet.todo_psql_subnet.id
   private_dns_zone_id           = azurerm_private_dns_zone.todo.id
   public_network_access_enabled = false
-  administrator_login           = var.backend_env["DB_USER"]
+  administrator_login           = "psqladmin"
   administrator_password        = var.backend_env["DB_PASSWORD"]
   zone                          = "1"
   storage_mb                    = 32768
