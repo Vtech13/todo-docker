@@ -66,7 +66,7 @@ resource "azurerm_postgresql_flexible_server" "todo" {
   delegated_subnet_id           = azurerm_subnet.todo_psql_subnet.id
   private_dns_zone_id           = azurerm_private_dns_zone.todo.id
   public_network_access_enabled = false
-  administrator_login           = "psqladmin"
+  administrator_login           = var.backend_env["DB_USER"]
   administrator_password        = var.backend_env["DB_PASSWORD"]
   zone                          = "1"
   storage_mb                    = 32768
@@ -188,16 +188,20 @@ resource "azurerm_container_app" "todo_api" {
       cpu    = 0.5
       memory = "1.0Gi"
       env {
+        name  = "PORT"
+        value = "5000"
+      }
+      env {
         name  = "DB_HOST"
         value = azurerm_postgresql_flexible_server.todo.fqdn
       }
       env {
         name  = "DB_USER"
-        value = var.backend_env["DB_USER"]
+        value = azurerm_postgresql_flexible_server.todo.administrator_login
       }
       env {
         name  = "DB_PASSWORD"
-        value = var.backend_env["DB_PASSWORD"]
+        value = azurerm_postgresql_flexible_server.todo.administrator_password
       }
       env {
         name  = "DB_NAME"
@@ -250,7 +254,7 @@ resource "azurerm_container_app" "todo_api" {
   }
   ingress {
     external_enabled = true
-    target_port      = 3000
+    target_port      = 5000
     traffic_weight {
       latest_revision = true
       percentage      = 100
